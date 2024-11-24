@@ -482,4 +482,99 @@ GO;
 EXEC UpdateTopic 83, 82, 'Recursion', 5;
 EXEC SelectTopicData 82;
 GO;
+-- Create Exam SP------------------------------------------------------------------------------------------------
+-- That take course id, exam model number, exam name, duration of exam, number of true & flase questions, and number of MCQs questions
+CREATE OR ALTER PROCEDURE CreateExam(@crs_id int, @exam_model int, @exam_name varchar(50), @duration int, @quesTureFalse int, @quesMCQ int)
+AS
+	BEGIN TRY
+		DECLARE @newExamId INT = (SELECT TOP 1 exm_id FROM Exam ORDER BY exm_id DESC) + 1;
+		INSERT INTO Exam
+		VALUES(@newExamId, @exam_name, @exam_model, @duration, @crs_id);
+	END TRY
+
+	BEGIN CATCH
+		SELECT 'Can''t Insert New Exam!';
+	END CATCH
+
+	BEGIN TRY
+		INSERT INTO Ques_exam 
+		SELECT TOP (@quesTureFalse) @newExamId,
+			   Ques_Id
+		FROM QUESTION
+		WHERE Type = 'True&False'
+		ORDER BY NEWID();
+
+		INSERT INTO Ques_exam 
+		SELECT TOP(@quesMCQ) @newExamId,
+			   Ques_Id
+		FROM QUESTION
+		WHERE Type = 'MCQ'
+		ORDER BY NEWID();
+	END TRY
+
+	BEGIN CATCH
+		SELECT 'Can''t Insert New Exam!';
+	END CATCH
+GO;
+--Test--
+EXEC CreateExam 4, 2, 'Fundamental Programming', 90, 10, 7;
+GO;
+-- Calculate grade SP------------------------------------------------------------------------------------------------
+-- That take exam id, student id
+CREATE OR ALTER FUNCTION GetExamOption(@exam_id INT, @std_id INT)
+RETURNS TABLE AS
+RETURN
+(
+	SELECT SQA.ques_id AS ques_id,
+		   CASE WHEN SQA.std_answer = 1 THEN QT.Opt1
+		        WHEN SQA.std_answer = 2 THEN QT.Opt2
+				WHEN SQA.std_answer = 3 THEN QT.Opt3
+				WHEN SQA.std_answer = 4 THEN QT.Opt4
+			END AS Answer
+	FROM Std_ExamAnswer AS SQA
+	INNER JOIN Question_Type AS QT
+	ON SQA.exam_id = @exam_id AND SQA.std_id = @std_id
+	AND SQA.ques_id = QT.Ques_Id
+);
+GO;
+
+CREATE OR ALTER PROCEDURE CalculateGrade(@exam_id int, @student_id int)
+AS
+	BEGIN TRY
+		DECLARE @NumberQuestion INT = (SELECT COUNT(*) FROM Ques_exam WHERE exam_id = @exam_id);
+		DECLARE @TotalDegree INT;
+
+		SET @TotalDegree =
+		(
+			SELECT SUM
+				    (
+						CASE 
+							 WHEN (Q.Answer =  QP.Answer) THEN 1
+							 ELSE 0
+						END
+					) AS TotalDegree
+			FROM GetExamOption(@exam_id, @student_id) AS QP
+			INNER JOIN QUESTION Q
+			ON QP.ques_id = Q.ques_id
+		);
+		DECLARE @DegreePercantge INT = (SELECT @TotalDegree / (1.0 * @NumberQuestion) * 100)
+
+		INSERT INTO Std_exam
+		VALUES(@exam_id, @student_id, @DegreePercantge, '2023-06-07')
+	END TRY
+
+	BEGIN CATCH
+		SELECT 'Can''t Calculate Grade OF STUDENT!';
+	END CATCH
+GO;
+-- TEST --
+EXEC CalculateGrade 95, 1;
+
+SELECT *
+FROM Std_exam
+
+
+
+
+
 
