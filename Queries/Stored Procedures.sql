@@ -572,8 +572,26 @@ EXEC CalculateGrade 95, 1;
 
 SELECT *
 FROM Std_exam
-
-
+GO;
+-- Exam Answer inline Table Function-----------------------------------------------------------------------------------------------------------------------------------------------
+-- it will take exam id and give u the correct answers for it.
+CREATE OR ALTER FUNCTION ExamAnswer(@exam_id int)
+RETURNS TABLE
+AS
+RETURN
+(
+	SELECT QE.ques_id,
+		   Q.Type,
+		   Q.Content,
+		   Q.Answer
+	FROM Ques_exam AS QE
+	INNER JOIN QUESTION AS Q
+	ON QE.ques_id = Q.Ques_Id
+	WHERE QE.exam_id = @exam_id
+);
+-- Test --------	
+SELECT *
+FROM ExamAnswer(95);
 
 
 
