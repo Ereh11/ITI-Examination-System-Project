@@ -1,3 +1,4 @@
+-----------------------------Tables 4 Main SPs------------------------------------------------------------------------------------------------------------------------------
 --#1- Student Table--------------------------------------------------------------------------------------------------------------------------------------------------
 -- 1- Add Student
 CREATE OR ALTER PROCEDURE AddStudent(@std_id int, @std_fname nvarchar(20), @std_lname nvarchar(20), @city nvarchar(20), @street nvarchar(50), @phone varchar(11), @std_DoB nvarchar(50), @email nvarchar(50), @passowrd nvarchar(20), @dept_id int)
@@ -482,6 +483,194 @@ GO;
 EXEC UpdateTopic 83, 82, 'Recursion', 5;
 EXEC SelectTopicData 82;
 GO;
+--#8- Std_Course Table--------------------------------------------------------------------------------------------------------------------------------------------------
+-- 1- INSERT Std_Course
+
+CREATE OR ALTER PROCEDURE AddStdCourse(@crs_id int, @std_id int, @enroll_date date)
+AS
+BEGIN TRY
+    INSERT INTO Std_course (crs_id, std_id, enroll_date)
+    VALUES (@crs_id, @std_id, @enroll_date);
+END TRY
+BEGIN CATCH
+    SELECT 'Insertion Failed' AS [Error Message];
+END CATCH;
+GO;
+-- Test 
+EXEC AddStdCourse 1, 5, '2024-01-01';
+GO;
+
+-- 2- Delete Std_Course
+CREATE OR ALTER PROCEDURE DeleteStdCourse(@crs_id int, @std_id int)
+AS
+BEGIN TRY
+    DELETE FROM Std_Course
+    WHERE crs_id = @crs_id AND std_id = @std_id;
+END TRY
+BEGIN CATCH
+    SELECT 'Deletion Failed' AS [Error Message];
+END CATCH;
+GO;
+-- test
+EXEC DeleteStdCourse 1, 5;
+GO;
+
+--- 3- Select Std_Course
+CREATE OR ALTER PROCEDURE SelectStdCoursbyCrsId(@crs_id int)
+AS
+IF EXISTS 
+		(
+			SELECT *
+			FROM Std_Course
+			WHERE crs_id = @crs_id
+		)
+BEGIN
+    SELECT *
+    FROM Std_Course
+    WHERE crs_id = @crs_id
+END
+ELSE
+    SELECT 'Selection Failed' AS [Error Message];
+GO;
+-- Test
+EXEC SelectStdCoursbyCrsId 1;
+GO;
+
+CREATE OR ALTER PROCEDURE SelectStdCoursbyStdId(@std_id int)
+AS
+IF EXISTS 
+		(
+			SELECT *
+			FROM Std_Course
+			WHERE std_id = @std_id
+		)
+BEGIN
+    SELECT *
+    FROM Std_Course
+    WHERE std_id = @std_id
+END
+ELSE
+    SELECT 'Selection Failed' AS [Error Message];
+GO;
+-- Test
+EXEC SelectStdCoursbyStdId 1;
+GO;
+
+--4- Update Std_Course
+CREATE OR ALTER PROCEDURE UpdateStdCourse(@old_crs_id int, @old_std_id int, @new_crs_id int, @new_std_id int, @enroll_date date)
+AS
+BEGIN TRY
+    UPDATE Std_Course
+    SET crs_id = @new_crs_id,
+        std_id = @new_std_id,
+        enroll_date = @enroll_date
+    WHERE crs_id = @old_crs_id AND std_id = @old_std_id;
+END TRY
+BEGIN CATCH
+    SELECT 'Update Failed' AS [Error Message];
+END CATCH;
+GO;
+--- test 
+EXEC UpdateStdCourse 101, 40, 102, 41, '2024-02-01';
+GO;
+
+--#9- Ins_Course Table--------------------------------------------------------------------------------------------------------------------------------------------------
+--1- INSERT Ins_Course
+
+CREATE OR ALTER PROCEDURE AddInsCourse(@crs_id int, @ins_id int)
+AS
+BEGIN TRY
+    INSERT INTO Ins_Course (crs_id, ins_id)
+    VALUES (@crs_id, @ins_id);
+END TRY
+BEGIN CATCH
+    SELECT 'Insertion Failed' AS [Error Message];
+END CATCH;
+GO;
+-----------
+-- Test
+EXEC AddInsCourse 5, 10;
+GO;
+
+-- 2 - Delete Ins_Course
+CREATE OR ALTER PROCEDURE DeleteInsCourse(@crs_id int, @ins_id int)
+AS
+BEGIN TRY
+    DELETE FROM Ins_Course
+    WHERE crs_id = @crs_id AND ins_id = @ins_id;
+END TRY
+BEGIN CATCH
+    SELECT 'Deletion Failed' AS [Error Message];
+END CATCH;
+GO;
+--- Test
+EXEC DeleteInsCourse 5, 1;
+GO;
+
+-- 3- Select Ins_Course
+CREATE OR ALTER PROCEDURE SelectInsCourseByCrsId(@crs_id int)
+AS
+IF EXISTS (
+			SELECT *
+			FROM Ins_Course
+			WHERE crs_id = @crs_id
+		  )
+BEGIN
+    SELECT *
+    FROM Ins_Course
+    WHERE crs_id = @crs_id
+END
+ELSE
+    SELECT 'Selection Failed' AS [Error Message];
+GO;
+-- Test
+EXEC SelectInsCourseByCrsId 5;
+GO;
+
+CREATE OR ALTER PROCEDURE SelectInsCourseByInsId(@ins_id int)
+AS
+IF EXISTS (
+			SELECT *
+			FROM Ins_Course
+			WHERE Ins_Id = @ins_id
+		  )
+BEGIN
+    SELECT *
+    FROM Ins_Course
+    WHERE Ins_Id = @ins_id
+END
+ELSE
+    SELECT 'Selection Failed' AS [Error Message];
+GO;
+-- Test
+EXEC SelectInsCourseByInsId 10;
+GO;
+-- 4- Update Ins_Course
+CREATE OR ALTER PROCEDURE UpdateInsCourse(@old_crs_id int, @old_ins_id int, @new_crs_id int, @new_ins_id int)
+AS
+BEGIN TRY
+    UPDATE Ins_Course
+    SET crs_id = @new_crs_id,
+        ins_id = @new_ins_id
+    WHERE crs_id = @old_crs_id AND ins_id = @old_ins_id;
+END TRY
+BEGIN CATCH
+    SELECT 'Update Failed' AS [Error Message];
+END CATCH;
+GO;
+--- test
+EXEC UpdateInsCourse 1, 5, 1, 3;
+GO;
+
+
+
+
+
+
+
+
+
+------------------------------------SPs-----------------------------------------------------------------------------------------
 -- Create Exam SP------------------------------------------------------------------------------------------------
 -- That take course id, exam model number, exam name, duration of exam, number of true & flase questions, and number of MCQs questions
 CREATE OR ALTER PROCEDURE CreateExam(@crs_id int, @exam_model int, @exam_name varchar(50), @duration int, @quesTureFalse int, @quesMCQ int)
@@ -589,10 +778,147 @@ RETURN
 	ON QE.ques_id = Q.Ques_Id
 	WHERE QE.exam_id = @exam_id
 );
+GO;
 -- Test --------	
 SELECT *
 FROM ExamAnswer(95);
+GO;
+------------------------------------Reports-----------------------------------------------------------------------------------------
+--#1: Report that returns the students information according to Department No parameter.
+CREATE OR ALTER PROCEDURE ReportStudentInformationByDeptID(@dept_id INT)
+AS
+	BEGIN TRY
+		SELECT *
+		FROM Student AS S
+		WHERE S.dept_id = @dept_id;
+	END TRY
+	BEGIN CATCH
+		SELECT 'Error with dept_id' AS MessageError;
+	END CATCH
+GO;
+-- Test ----
+EXEC ReportStudentInformationByDeptID 10;
+GO;
+--#2: Report that takes the student ID and returns the grades of the student in all courses. <= Error here!
+CREATE OR ALTER PROCEDURE StudentGradesByStdID(@std_id INT)
+AS
+	BEGIN TRY
+		SELECT  S.std_id,
+				STE.crs_id,
+				S.std_fname + ' ' + S.std_lname AS [Full Name],
+				STE.grade
+		FROM Student AS S
+		INNER JOIN Std_ExamAnswer AS SCE
+		ON SCE.std_id = S.std_id
+		INNER JOIN Std_exam AS STE
+		ON STE.std_id = SCE.std_id
+		WHERE S.std_id = @std_id;
+	END TRY
+	BEGIN CATCH
+		SELECT 'Error with Student ID' AS [Error Message];
+	END CATCH
+GO;
+-- Test ----
+EXEC StudentGradesByStdID 1;
+GO;
+/*--#3: Report that takes the instructor ID and returns the name of the courses that he teaches
+and the number of student per course.*/
+GO;
+CREATE OR ALTER VIEW CountStudentPerCourse 
+		AS
+		(
+			SELECT SC.crs_id,
+				   COUNT(S.std_id) AS [Number Enrolled Students]
+			FROM Student AS S
+			INNER JOIN Std_course AS SC
+			ON S.std_id = SC.std_id
+			GROUP BY SC.crs_id
+		)
+GO;
+CREATE OR ALTER PROCEDURE ReportInstructorCoursesAndStudent(@ins_id INT)
+AS
+	
+	BEGIN TRY
+		SELECT C.crs_name,
+			   CTC.[Number Enrolled Students]
+		FROM Ins_Course AS IC
+		INNER JOIN Course AS C
+		ON IC.Crs_Id = C.crs_id
+		INNER JOIN CountStudentPerCourse AS CTC 
+		ON CTC.crs_id = IC.Crs_Id
+		WHERE IC.ins_id = @ins_id
+	END TRY
+	BEGIN CATCH
+		SELECT 'Error with Instructor ID' AS [Error Message];
+	END CATCH
+GO;
+-- Test ----
+EXEC ReportInstructorCoursesAndStudent 5;
+GO;
+--#4: Report that takes course ID and returns its topics 
+CREATE OR ALTER PROCEDURE ReportTopicByCourseID(@crs_id INT)
+AS
+	BEGIN TRY
+		SELECT T.top_id,
+			   T.top_name
+		FROM Course AS C
+		INNER JOIN Topic AS T
+		ON C.crs_id = T.crs_id
+		WHERE C.crs_id = @crs_id;
+	END TRY
+	BEGIN CATCH
+		SELECT 'Error with @crs_id' AS MessageError;
+	END CATCH
+GO;
+-- Test ----
+EXEC ReportTopicByCourseID 5;
+GO;
+--#5: Report that takes exam number and returns the Questions in it and chocies 
+CREATE OR ALTER PROCEDURE ReportExamQuestionsChoicesByExamID(@exm_id INT)
+AS
+	BEGIN TRY
+		SELECT Q.*,
+			   QT.Opt1,
+			   QT.Opt2,
+			   QT.Opt3,
+			   QT.Opt4
+		FROM Exam AS E
+		INNER JOIN Ques_exam AS QE
+		ON E.exm_id = QE.exam_id
+		INNER JOIN QUESTION AS Q
+		ON Q.Ques_Id = QE.ques_id
+		INNER JOIN Question_Type AS QT
+		ON Q.Ques_Id =QT.Ques_Id
+		WHERE E.exm_id = @exm_id;
+	END TRY
+	BEGIN CATCH
+		SELECT 'Error with exm_id' AS MessageError;
+	END CATCH
+GO;
+-- Test ----
+EXEC ReportExamQuestionsChoicesByExamID 95;
+GO;
+--#6: Report that takes exam number and the student ID then returns the Questions in this exam with the student answers.  
+CREATE OR ALTER PROCEDURE ReportExamAndStudentAnswer(@exm_id INT, @std_id INT)
+AS
+	BEGIN TRY
+		SELECT Q.Content,
+			   Options.Answer AS [Student Answer]
+		FROM Exam AS E
+		INNER JOIN Std_ExamAnswer AS SEA
+		ON E.exm_id = SEA.exam_id 
+		AND SEA.exam_id = @exm_id AND SEA.std_id = @std_id
+		INNER JOIN QUESTION AS Q
+		ON Q.Ques_Id = SEA.ques_id
+		INNER JOIN GetExamOption(@exm_id, @std_id) AS Options
+		ON Options.ques_id = SEA.Ques_Id
 
-
+	END TRY
+	BEGIN CATCH
+		SELECT 'Error Occured!' AS MessageError;
+	END CATCH
+GO;
+-- Test ----
+EXEC ReportExamAndStudentAnswer 95, 1;
 
 
