@@ -661,15 +661,102 @@ GO;
 --- test
 EXEC UpdateInsCourse 1, 5, 1, 3;
 GO;
+--#9- Std_exam Table--------------------------------------------------------------------------------------------------------------------------------------------------
+--1- INSERT Std_exam
+CREATE OR ALTER PROCEDURE AddStud_Exam (@exam_id int, @std_id int , @grade int , @take_date date)
+AS
+	BEGIN TRY
+		INSERT INTO Std_exam
+		VALUES(@exam_id , @std_id  , @grade  , @take_date);
+	END TRY
+	BEGIN CATCH
+		SELECT 'Insertion Failed' AS [Error Message];
+	END CATCH;
+	
+GO;
+-- Test
+EXEC AddStud_Exam  95, 1, 52,'2023-06-07';
+GO;
+
+-- 2 - Delete Std_exam
+CREATE OR ALTER PROCEDURE DeleteStud_Exam(@exam_id int , @std_id int )
+AS
+	BEGIN TRY
+		DELETE FROM Std_exam
+		WHERE  exam_id=  @exam_id  and std_id=@std_id;
+	END TRY
+	BEGIN CATCH
+		SELECT 'Deleted Failed' AS [Error Message];
+	END CATCH;
+GO;
+--- Test
+EXEC DeleteStud_Exam  1 ,1 ;
+GO;
+
+-- 3- Select Std_exam
+CREATE OR ALTER PROCEDURE SelectStu_ExamByExamId(@exam_id int)
+AS
+		IF EXISTS
+		(
+			SELECT *
+			FROM Std_exam
+			WHERE exam_id = @exam_id
+		)
+		BEGIN
+			SELECT *
+			FROM Std_exam
+			WHERE exam_id = @exam_id;
+		END
+	ELSE
+		SELECT 'Selection Failed' AS [Error Message];
+GO;
+-- Test
+EXEC SelectStu_ExamByExamId 95;
+GO;
+CREATE OR ALTER PROCEDURE SelectStu_ExamByStudentId(@std_id int)
+AS
+		IF EXISTS
+		(
+			SELECT *
+			FROM Std_exam
+			WHERE std_id = @std_id
+		)
+		BEGIN
+			SELECT *
+			FROM Std_exam
+			WHERE std_id = @std_id;
+		END
+	ELSE
+		SELECT 'Selection Failed' AS [Error Message];
+GO;
+-- Test
+EXEC SelectStu_ExamByStudentId 1;
+GO;
+GO;
+-- 4- Update Ins_Course
+CREATE OR ALTER PROCEDURE UpdateStu_exam(@olddexm_id int,@exam_id int, @std_id int , @grade int , @take_date date)
+AS
+	BEGIN TRY
+		UPDATE Std_exam
+		SET exam_id = @exam_id, 
+		    std_id = @std_id,
+			grade = @grade,
+			take_date= @take_date		
+		WHERE exam_id = @olddexm_id;
+	END TRY
+	BEGIN CATCH
+		SELECT 'Update Failed' AS [Error Message];
+	END CATCH;
+GO;
+--Test
+EXEC UpdateStu_exam 90,95, 1, 52,'2023-06-07';
+EXEC SelectStu_ExamByExamId 90;
+GO;
+
+--#10- ExamAnswer Table--------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
-
-
-
-
-
-
+GO;
 ------------------------------------SPs-----------------------------------------------------------------------------------------
 -- Create Exam SP------------------------------------------------------------------------------------------------
 -- That take course id, exam model number, exam name, duration of exam, number of true & flase questions, and number of MCQs questions
@@ -707,6 +794,9 @@ AS
 GO;
 --Test--
 EXEC CreateExam 4, 2, 'Fundamental Programming', 90, 10, 7;
+EXEC CreateExam 1, 3, 'Web Exam', 120, 10, 5;
+EXEC CreateExam 5, 3, 'C# Fundamental Exam', 120, 10, 5;
+EXEC CreateExam 9, 1, 'Java Exam', 120, 10, 5;
 GO;
 -- Calculate grade SP------------------------------------------------------------------------------------------------
 -- That take exam id, student id
@@ -757,7 +847,7 @@ AS
 	END CATCH
 GO;
 -- TEST --
-EXEC CalculateGrade 95, 1;
+EXEC CalculateGrade 96, 1;
 
 SELECT *
 FROM Std_exam
@@ -784,7 +874,7 @@ SELECT *
 FROM ExamAnswer(95);
 GO;
 ------------------------------------Reports-----------------------------------------------------------------------------------------
---#1: Report that returns the students information according to Department No parameter.
+--#1: Report that returns the students information according to Department ID.
 CREATE OR ALTER PROCEDURE ReportStudentInformationByDeptID(@dept_id INT)
 AS
 	BEGIN TRY
@@ -798,21 +888,21 @@ AS
 GO;
 -- Test ----
 EXEC ReportStudentInformationByDeptID 10;
+
 GO;
---#2: Report that takes the student ID and returns the grades of the student in all courses. <= Error here!
-CREATE OR ALTER PROCEDURE StudentGradesByStdID(@std_id INT)
+--#2: Report that takes the student ID and returns the grades of the student in all courses.
+CREATE OR ALTER PROCEDURE ReportStudentGradesByStdID(@std_id INT)
 AS
 	BEGIN TRY
-		SELECT  S.std_id,
-				STE.crs_id,
-				S.std_fname + ' ' + S.std_lname AS [Full Name],
-				STE.grade
-		FROM Student AS S
-		INNER JOIN Std_ExamAnswer AS SCE
-		ON SCE.std_id = S.std_id
-		INNER JOIN Std_exam AS STE
-		ON STE.std_id = SCE.std_id
-		WHERE S.std_id = @std_id;
+		SELECT  E.crs_id,
+				C.crs_name AS [Course Name],
+				SE.grade AS [Student Grade]
+		FROM Exam AS E
+		INNER JOIN Std_exam AS SE
+		ON E.exm_id = SE.exam_id
+		INNER JOIN Course AS C
+		ON E.crs_id = C.crs_id
+		WHERE SE.std_id = @std_id;
 	END TRY
 	BEGIN CATCH
 		SELECT 'Error with Student ID' AS [Error Message];
@@ -821,6 +911,7 @@ GO;
 -- Test ----
 EXEC StudentGradesByStdID 1;
 GO;
+
 /*--#3: Report that takes the instructor ID and returns the name of the courses that he teaches
 and the number of student per course.*/
 GO;
@@ -855,6 +946,7 @@ GO;
 -- Test ----
 EXEC ReportInstructorCoursesAndStudent 5;
 GO;
+
 --#4: Report that takes course ID and returns its topics 
 CREATE OR ALTER PROCEDURE ReportTopicByCourseID(@crs_id INT)
 AS
@@ -873,6 +965,7 @@ GO;
 -- Test ----
 EXEC ReportTopicByCourseID 5;
 GO;
+
 --#5: Report that takes exam number and returns the Questions in it and chocies 
 CREATE OR ALTER PROCEDURE ReportExamQuestionsChoicesByExamID(@exm_id INT)
 AS
@@ -898,6 +991,7 @@ GO;
 -- Test ----
 EXEC ReportExamQuestionsChoicesByExamID 95;
 GO;
+
 --#6: Report that takes exam number and the student ID then returns the Questions in this exam with the student answers.  
 CREATE OR ALTER PROCEDURE ReportExamAndStudentAnswer(@exm_id INT, @std_id INT)
 AS
@@ -911,14 +1005,13 @@ AS
 		INNER JOIN QUESTION AS Q
 		ON Q.Ques_Id = SEA.ques_id
 		INNER JOIN GetExamOption(@exm_id, @std_id) AS Options
-		ON Options.ques_id = SEA.Ques_Id
-
+		ON Options.ques_id = SEA.Ques_Id;
 	END TRY
+
 	BEGIN CATCH
 		SELECT 'Error Occured!' AS MessageError;
 	END CATCH
 GO;
 -- Test ----
 EXEC ReportExamAndStudentAnswer 95, 1;
-
-
+GO;
