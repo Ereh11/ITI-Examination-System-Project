@@ -338,43 +338,72 @@ as
 -- test
 SelectAllQuesOpts
 
+
 -- 4- Update entire raw Question and Options 
 --- For Spacific Question 
 create or alter proc UpdateQuesAndOpt (@oldq_id int, @newq_id int ,@opt1 nvarchar(10), @opt2 nvarchar(10),@opt3 nvarchar(30)=Null,@opt4 nvarchar(30)=Null)
 as 
-	 begin try
-		 if not exists (select 1 from Question_Type where ques_id = @oldq_id)
+	begin try
+		if not exists (select 1 from Question_Type where ques_id = @oldq_id)
+		begin
+			select 'Question ID does not exist' AS [Error Message];
+			return;
+		end
+		if exists ( select 1 from Question_Type where Ques_Id=@newq_id)
+		begin 
+			select 'The Question with new ID that you want to update already exists' AS [Error Message];
+			return;
+		end
+
+		declare @currentType nvarchar(10);
+		select @currentType =  type from QUESTION where Ques_Id = @oldq_id;
+
+		
+		if @currentType = 'True&False' 
+		begin
+			if @opt3 is not null or @opt4 is not null
 			begin
-					 select 'Question ID does not exist' AS [Error Message];
-					 return;
+				select 'Cannot update a True/False question to an MCQ question , True/False questions can only have two options' as [Error Message];
+				return;
 			end
-		 if exists ( select 1 from Question_Type where Ques_Id=@newq_id)
-			begin 
-					select 'The Question with new ID that you want to update already exist' AS [Error Message];
-					return;
+		end
+
+		if @currentType = 'MCQ'
+		begin
+			if @opt3 is null or @opt4 is null
+			begin
+				select ' Cannot update an MCQ question to a True/False question ,MCQ questions require all four options' as [Error Message];
+				return;
 			end
-		else
-			   begin
-					update Question_Type 
-						set Ques_Id = @newq_id,
-							Opt1 = @opt1,
-							Opt2 = @opt2,
-							Opt3 = @opt3,
-							Opt4 = @opt4
-					where Ques_id = @oldq_id;	
-				end
+		end
+
+		-- if empty options
+		if @opt1 = '' or @opt2 = '' or 
+		   (@currentType = 'MCQ' and (@opt3 = '' or @opt4 = ''))
+		begin
+			select 'Options cannot be empty' as [Error Message];
+			return;
+		end
+
+		update Question_Type 
+			set Ques_Id = @newq_id,
+				Opt1 = @opt1,
+				Opt2 = @opt2,
+				Opt3 = @opt3,
+				Opt4 = @opt4
+		where Ques_id = @oldq_id;	
 
 		select 'Operation completed successfully' AS [Message];
 
 	end try
 
 	begin catch
-		select 'Opertion Failed' as [Error Message]
+		select 'Operation Failed' as [Error Message];
 	end catch
 
 
 -- test
-UpdateQuesAndOpt 102,2, 'Data type different','there are no differ','a and b' , 'none of above'
+UpdateQuesAndOpt 101,102, 'Data type different','there are no differ','a and b' , 'none of above'
 
 --- 4.1 Update options For Spacific Question 
 create or alter proc UpdateOpt (@q_id int,@opt1 nvarchar(10), @opt2 nvarchar(10),@opt3 nvarchar(30)=Null,@opt4 nvarchar(30)=Null)
@@ -385,6 +414,37 @@ as
 					 select 'Question ID does not exist' AS [Error Message];
 					 return;
 			end
+				
+		declare @currentType nvarchar(10);
+		select @currentType =  type from QUESTION where Ques_Id = @q_id;
+
+		
+		if @currentType = 'True&False' 
+		begin
+			if @opt3 is not null or @opt4 is not null
+			begin
+				select 'Cannot update a True/False question to an MCQ question , True/False questions can only have two options' as [Error Message];
+				return;
+			end
+		end
+
+		if @currentType = 'MCQ'
+		begin
+			if @opt3 is null or @opt4 is null
+			begin
+				select ' Cannot update an MCQ question to a True/False question ,MCQ questions require all four options' as [Error Message];
+				return;
+			end
+		end
+
+		-- if empty options
+		if @opt1 = '' or @opt2 = '' or 
+		   (@currentType = 'MCQ' and (@opt3 = '' or @opt4 = ''))
+		begin
+			select 'Options cannot be empty' as [Error Message];
+			return;
+		end
+
 		else
 			   begin
 					update Question_Type 
@@ -403,4 +463,5 @@ as
 		select 'Opertion Failed' as [Error Message]
 	end catch
 
-UpdateOpt 10 , 'Data type different','there are no differ','a and b' , 'none of above'
+UpdateOpt 10 , 'Data type different',''
+
