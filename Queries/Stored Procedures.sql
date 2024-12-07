@@ -661,7 +661,8 @@ GO;
 --- test
 EXEC UpdateInsCourse 1, 5, 1, 3;
 GO;
---#9- Std_exam Table--------------------------------------------------------------------------------------------------------------------------------------------------
+
+--#10- Std_exam Table--------------------------------------------------------------------------------------------------------------------------------------------------
 --1- INSERT Std_exam
 CREATE OR ALTER PROCEDURE AddStud_Exam (@exam_id int, @std_id int , @grade int , @take_date date)
 AS
@@ -753,7 +754,7 @@ EXEC UpdateStu_exam 90,95, 1, 52,'2023-06-07';
 EXEC SelectStu_ExamByExamId 90;
 GO;
 
---#10- ExamAnswer Table--------------------------------------------------------------------------------------------------------------------------------------------------
+--#11- ExamAnswer Table--------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 GO;
@@ -881,9 +882,18 @@ AS
 		SELECT *
 		FROM Student AS S
 		WHERE S.dept_id = @dept_id;
+		-- Data For Visual Report
+		DELETE 
+		FROM HelperReport
+		WHERE ID = 1;
+
+		INSERT INTO HelperReport
+			SELECT 1,  dept_name AS [Department Name]
+			FROM Department
+			WHERE dept_id = @dept_id;
 	END TRY
 	BEGIN CATCH
-		SELECT 'Error with dept_id' AS MessageError;
+		SELECT 'Error Occurs' AS MessageError;
 	END CATCH
 GO;
 -- Test ----
@@ -903,6 +913,15 @@ AS
 		INNER JOIN Course AS C
 		ON E.crs_id = C.crs_id
 		WHERE SE.std_id = @std_id;
+		-- Data For Visual Report
+		DELETE 
+		FROM HelperReport
+		WHERE ID = 2;
+
+		INSERT INTO HelperReport
+			SELECT 2,  std_fname + ' ' + std_lname AS [Full Name]
+			FROM Student
+			WHERE std_id = @std_id;
 	END TRY
 	BEGIN CATCH
 		SELECT 'Error with Student ID' AS [Error Message];
@@ -938,6 +957,15 @@ AS
 		INNER JOIN CountStudentPerCourse AS CTC 
 		ON CTC.crs_id = IC.Crs_Id
 		WHERE IC.ins_id = @ins_id
+		-- Data For Visual Report
+		DELETE 
+		FROM HelperReport
+		WHERE ID = 3;
+
+		INSERT INTO HelperReport
+			SELECT 3,  ins_fname + ' ' + ins_lname AS [Full Name]
+			FROM Instructor
+			WHERE ins_id = @ins_id;
 	END TRY
 	BEGIN CATCH
 		SELECT 'Error with Instructor ID' AS [Error Message];
@@ -957,6 +985,16 @@ AS
 		INNER JOIN Topic AS T
 		ON C.crs_id = T.crs_id
 		WHERE C.crs_id = @crs_id;
+
+		-- Data For Visual Report
+		DELETE 
+		FROM HelperReport
+		WHERE ID = 4;
+
+		INSERT INTO HelperReport
+			SELECT 4, crs_name AS [Course Name]
+			FROM Course AS C
+			WHERE crs_id = @crs_id;
 	END TRY
 	BEGIN CATCH
 		SELECT 'Error with @crs_id' AS MessageError;
@@ -983,6 +1021,25 @@ AS
 		INNER JOIN Question_Type AS QT
 		ON Q.Ques_Id =QT.Ques_Id
 		WHERE E.exm_id = @exm_id;
+
+		-- Date For Visual Report
+		DELETE 
+		FROM HelperReport
+		WHERE ID = 5;
+	
+		INSERT INTO HelperReport
+			SELECT 5, crs_name AS [Course Name]
+			FROM Exam AS E
+			INNER JOIN Course AS C
+			ON E.crs_id = C.crs_id
+			WHERE E.exm_id = @exm_id;
+
+		INSERT INTO HelperReport
+			SELECT 5, exm_name AS [Exam Name]
+			FROM Exam AS E
+			INNER JOIN Course AS C
+			ON E.crs_id = C.crs_id
+			WHERE E.exm_id = @exm_id;
 	END TRY
 	BEGIN CATCH
 		SELECT 'Error with exm_id' AS MessageError;
@@ -1006,6 +1063,22 @@ AS
 		ON Q.Ques_Id = SEA.ques_id
 		INNER JOIN GetExamOption(@exm_id, @std_id) AS Options
 		ON Options.ques_id = SEA.Ques_Id;
+		-- Date For Visual Report
+		DELETE 
+		FROM HelperReport
+		WHERE ID = 6;
+		--
+		INSERT INTO HelperReport
+			SELECT 6, std_fname + ' ' + std_lname AS [Full Name]
+			FROM Student
+			WHERE std_id = @std_id;
+
+		INSERT INTO HelperReport
+			SELECT 6, crs_name AS [Course Name]
+			FROM Exam AS E
+			INNER JOIN Course AS C
+			ON E.crs_id = C.crs_id
+			WHERE E.exm_id = @exm_id;		   
 	END TRY
 
 	BEGIN CATCH
@@ -1015,3 +1088,9 @@ GO;
 -- Test ----
 EXEC ReportExamAndStudentAnswer 95, 1;
 GO;
+
+CREATE TABLE HelperReport
+(
+	ID INT,
+	Value VARCHAR(30)
+)
