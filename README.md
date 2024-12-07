@@ -28,6 +28,10 @@ git clone https://github.com/Ereh11/ITI-Examination-System-Project
 ![Mapping](https://github.com/Ereh11/ITI-Examination-System-Project/blob/main/ERD%20and%20Mapping/Mapping.png)
 ## Database Schema
 ![DB schema](https://github.com/Ereh11/ITI-Examination-System-Project/blob/main/DB%20Schema/DB%20Schema.jpeg)
+## Reports
+![GradesOFStudent](https://github.com/Ereh11/ITI-Examination-System-Project/blob/main/Reports/Pics/AllGradesOFStudent.png)
+![CoursesOFInstructor](https://github.com/Ereh11/ITI-Examination-System-Project/blob/main/Reports/Pics/CoursesOFInstructor.png)
+![StudentExamAnswer](https://github.com/Ereh11/ITI-Examination-System-Project/blob/main/Reports/Pics/StudentExamAnswer.png)
 
 ## Features
 - SELECT, INSERT, UPDATE and DELETE in DB Tables
